@@ -33,9 +33,9 @@ double movingAngleOffset = 0.1;
 double input, output;
 
 //adjust these values to fit your own design
-double Kp = 75; //30    best base start: 30 1 0
-double Kd = 1.5; // 1   best  base improvement: 60 2.2 0
-double Ki = 600; // 0       // okay place 60 1.5 50
+double Kp = 60; //30    best base start: 30 1 0
+double Kd = 2.2; // 1   best  base improvement: 60 2.2 0
+double Ki = 270; // 0       // okay place 60 1.5 50
 // actually did something 60 1 500 with 5 sampling time
 PID pid(&input, &output, &setpoint, Kp, Ki, Kd, DIRECT);
 
