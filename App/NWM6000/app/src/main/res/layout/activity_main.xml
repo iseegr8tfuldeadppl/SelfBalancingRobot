@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <ImageView
+        android:scaleType="centerCrop"
+        android:src="@drawable/nig"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <ImageView
+        android:padding="35dp"
+        android:src="@drawable/hh"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:weightSum="3">
+        <RelativeLayout
+            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="0dp" >
+
+            <com.airbnb.lottie.LottieAnimationView
+                android:rotation="90"
+                android:id="@+id/animation_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:lottie_rawRes="@raw/arrows"
+                app:lottie_loop="true"
+                android:layout_centerInParent="true"
+                app:lottie_autoPlay="true" />
+        </RelativeLayout>
+        <RelativeLayout
+            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="0dp" >
+
+        </RelativeLayout>
+        <RelativeLayout
+            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="0dp" >
+
+            <com.airbnb.lottie.LottieAnimationView
+                android:rotation="90"
+                android:layout_centerInParent="true"
+                android:id="@+id/animation_view2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:lottie_rawRes="@raw/arrows"
+                app:lottie_loop="true"
+                app:lottie_autoPlay="true" />
+        </RelativeLayout>
+    </LinearLayout>
+
+
+    <TextView
+        android:layout_gravity="center_vertical|start"
+        android:rotation="90"
+        android:id="@+id/yes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:text="niggerniggernigger"
+        android:textColor="@android:color/white" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:text="spam"
+        android:onClick="spamClicked"
+        android:layout_height="wrap_content" />
+</FrameLayout>

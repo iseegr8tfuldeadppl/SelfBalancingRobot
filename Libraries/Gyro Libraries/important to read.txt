@@ -1,0 +1,1 @@
+both libraries used in both versions of the code have the same name so you cannot install them at the same time nor compile with them installed together

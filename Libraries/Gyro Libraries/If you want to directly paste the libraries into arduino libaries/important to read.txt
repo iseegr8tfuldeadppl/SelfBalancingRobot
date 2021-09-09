@@ -1,0 +1,1 @@
+you MUST move the other library folder from arduino libraries folder in order to avoid overlapping of libraries
