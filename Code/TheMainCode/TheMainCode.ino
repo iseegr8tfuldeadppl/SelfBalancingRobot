@@ -27,20 +27,20 @@ VectorFloat gravity; // [x, y, z] gravity vector
 float ypr[3]; // [yaw, pitch, roll] yaw/pitch/roll container and gravity vector
 
 //PID
-double originalSetpoint = 179.4;
+double originalSetpoint = 179.7;
 double setpoint = originalSetpoint;
 double movingAngleOffset = 0.1;
 double input, output;
 
 //adjust these values to fit your own design
-double Kp = 19; //30    best base start: 30 1 0
-double Kd = 0.5; // 1   best  base improvement: 60 2.2 0
-double Ki = 200; // 0       // okay place 60 1.5 50
+double Kp = 21; //30    best base start: 30 1 0
+double Kd = 0.63; // 1   best  base improvement: 60 2.2 0
+double Ki = 150; // 0       // okay place 60 1.5 50
 // actually did something 60 1 500 with 5 sampling time
 PID pid(&input, &output, &setpoint, Kp, Ki, Kd, DIRECT);
 
 double motorSpeedFactorLeft = 1.0;
-double motorSpeedFactorRight = 1.0;
+double motorSpeedFactorRight = 0.9;
 
 //MOTOR CONTROLLER
 int ENA = 5;
