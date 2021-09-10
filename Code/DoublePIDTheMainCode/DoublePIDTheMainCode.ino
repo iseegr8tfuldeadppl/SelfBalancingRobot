@@ -27,26 +27,31 @@ VectorFloat gravity; // [x, y, z] gravity vector
 float ypr[3]; // [yaw, pitch, roll] yaw/pitch/roll container and gravity vector
 
 //PID
-double originalSetpoint = 181;
-int delta = 15;
+double originalSetpoint = 181.3; // 181
+int delta = 7; // 15
 //PID1
 double setpoint = originalSetpoint;
 double movingAngleOffset = 0.1;
 double input, output;
-double Kp = 20;
-double Ki = 200;
-double Kd = 1;
+// 20 200 1.0
+// 20 200 0.5
+// 13 190 0.65
+double Kp = 18;
+double Ki = 120;
+double Kd = 0.65;
 
 int samplingTime = 7;
 PID pid(&input, &output, &setpoint, Kp, Ki, Kd, DIRECT);
 
 // PID2
+// 80 550 1.0
+// 95 550 0.85
 double setpoint2 = originalSetpoint;
 double movingAngleOffset2 = 0.1;
 double input2, output2;
-double Kp2 = 80;
+double Kp2 = 120;
 double Ki2 = 550;
-double Kd2 = 1;
+double Kd2 = 0.95;
 
 int samplingTime2 = 7;
 PID pid2(&input2, &output2, &setpoint2, Kp2, Ki2, Kd2, DIRECT);
