@@ -27,20 +27,24 @@ VectorFloat gravity; // [x, y, z] gravity vector
 float ypr[3]; // [yaw, pitch, roll] yaw/pitch/roll container and gravity vector
 
 //PID
-double originalSetpoint = 179.7;
+double originalSetpoint = 179.5;
 double setpoint = originalSetpoint;
 double movingAngleOffset = 0.1;
 double input, output;
 
 //adjust these values to fit your own design
-double Kp = 21; //30    best base start: 30 1 0
-double Kd = 0.63; // 1   best  base improvement: 60 2.2 0
-double Ki = 150; // 0       // okay place 60 1.5 50
+// p21 i150 d0.63  working but not extremely strength at extremeties 
+// p30 i230 d0.62  working a bit stronger at extremeties 
+// p30 i230 d0.8  working
+// p26 i110 d0.5  new veersion
+double Kp = 27;
+double Ki = 250;
+double Kd = 0.85;
 // actually did something 60 1 500 with 5 sampling time
 PID pid(&input, &output, &setpoint, Kp, Ki, Kd, DIRECT);
 
 double motorSpeedFactorLeft = 1.0;
-double motorSpeedFactorRight = 0.9;
+double motorSpeedFactorRight = 1.0;
 
 //MOTOR CONTROLLER
 int ENA = 5;
@@ -164,7 +168,8 @@ void loop()
  mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
  input = ypr[1] * 180/M_PI + 180;
   pid.Compute();
-  motorController.move(output, MIN_ABS_SPEED);
+  if(abs(input - originalSetpoint)>2.5)
+    motorController.move(output, MIN_ABS_SPEED);
 
  if(input>originalSetpoint)
   digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on 
