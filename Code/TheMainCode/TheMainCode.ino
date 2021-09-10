@@ -27,7 +27,7 @@ VectorFloat gravity; // [x, y, z] gravity vector
 float ypr[3]; // [yaw, pitch, roll] yaw/pitch/roll container and gravity vector
 
 //PID
-double originalSetpoint = 179.5;
+double originalSetpoint = 180;
 double setpoint = originalSetpoint;
 double movingAngleOffset = 0.1;
 double input, output;
@@ -37,9 +37,9 @@ double input, output;
 // p30 i230 d0.62  working a bit stronger at extremeties 
 // p30 i230 d0.8  working
 // p26 i110 d0.5  new veersion
-double Kp = 27;
-double Ki = 250;
-double Kd = 0.85;
+double Kp =30;
+double Ki = 230;
+double Kd = 0.8;
 // actually did something 60 1 500 with 5 sampling time
 PID pid(&input, &output, &setpoint, Kp, Ki, Kd, DIRECT);
 
@@ -168,7 +168,7 @@ void loop()
  mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
  input = ypr[1] * 180/M_PI + 180;
   pid.Compute();
-  if(abs(input - originalSetpoint)>2.5)
+  //if(abs(input - originalSetpoint)>1)
     motorController.move(output, MIN_ABS_SPEED);
 
  if(input>originalSetpoint)
