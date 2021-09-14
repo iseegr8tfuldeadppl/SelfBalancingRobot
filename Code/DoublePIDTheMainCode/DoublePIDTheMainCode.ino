@@ -27,8 +27,8 @@ VectorFloat gravity; // [x, y, z] gravity vector
 float ypr[3]; // [yaw, pitch, roll] yaw/pitch/roll container and gravity vector
 
 //PID
-double originalSetpoint = 173.95; // 181
-int lineBetweenTwoPids = 7; // 15
+double originalSetpoint = 173.85; // 181
+int lineBetweenTwoPids = 8; // 15
 //PID1
 double setpoint = originalSetpoint;
 double movingAngleOffset = 0.1;
@@ -36,11 +36,11 @@ double input, output;
 // 20 200 1.0
 // 20 200 0.5
 // 13 190 0.65
-double Kp = 30;
-double Ki = 315;
-double Kd = 0.7;
+double Kp = 30; // 20
+double Ki = 280; // 140
+double Kd = 0.8; // 0.7
 
-int samplingTime = 7;
+int samplingTime = 7; // 7
 PID pid(&input, &output, &setpoint, Kp, Ki, Kd, DIRECT);
 
 // PID2
@@ -49,16 +49,16 @@ PID pid(&input, &output, &setpoint, Kp, Ki, Kd, DIRECT);
 double setpoint2 = originalSetpoint;
 double movingAngleOffset2 = 0.1;
 double input2, output2;
-double Kp2 = 120;
-double Ki2 = 550;
-double Kd2 = 0.95;
+double Kp2 = 135;
+double Ki2 = 525;
+double Kd2 = 9.10;
 
 int samplingTime2 = 7;
 PID pid2(&input2, &output2, &setpoint2, Kp2, Ki2, Kd2, DIRECT);
 
 
 double motorSpeedFactorLeft = 1.0;
-double motorSpeedFactorRight = 1.0;
+double motorSpeedFactorRight = 0.9;
 
 //MOTOR CONTROLLER
 int ENA = 5;
@@ -195,7 +195,7 @@ void loop() {
         pid2.SetTunings(Kp2, Ki2, Kd2);
         break;
       case 'l':
-        Ki -= 35;
+        Ki2 -= 35;
         if(Ki2<0)
           Ki2 = 0;
         pid2.SetTunings(Kp2, Ki2, Kd2);
@@ -236,8 +236,6 @@ void loop() {
         break;
     }
   }
-  Serial.println("Kp " + String(Kp) + " Ki " + String(Ki) + " Kd " + String(Kd) + " setpoint " + String(setpoint) + " d " + String(lineBetweenTwoPids) + " Kp2 " + String(Kp2) + " Ki2 " + String(Ki2) + " Kd2 " + String(Kd2));
-        
   // Step 0: do mpu stuff
   if (!dmpReady) return;
   mpuInterrupt = false;
@@ -262,7 +260,7 @@ void loop() {
     pid.Compute();
     pid2.Compute();
     
-    if(abs(input - originalSetpoint)>lineBetweenTwoPids)
+    if(abs(input - setpoint)>lineBetweenTwoPids)
       motorController.move(output2, MIN_ABS_SPEED);
     else
       motorController.move(output, MIN_ABS_SPEED);
@@ -273,5 +271,7 @@ void loop() {
     else 
       digitalWrite(LED_BUILTIN, LOW); 
 
+  Serial.println(String(input) + " " + String(setpoint) + " | " + String(Kp) + " " + String(Ki) + " " + String(Kd) + " | " + String(lineBetweenTwoPids) + " " + String(Kp2) + " " + String(Ki2) + " " + String(Kd2));
+  //Serial.println(input);
   }
 }
