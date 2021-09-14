@@ -27,8 +27,8 @@ VectorFloat gravity; // [x, y, z] gravity vector
 float ypr[3]; // [yaw, pitch, roll] yaw/pitch/roll container and gravity vector
 
 //PID
-double originalSetpoint = 181.3; // 181
-int delta = 7; // 15
+double originalSetpoint = 173.95; // 181
+int lineBetweenTwoPids = 7; // 15
 //PID1
 double setpoint = originalSetpoint;
 double movingAngleOffset = 0.1;
@@ -36,9 +36,9 @@ double input, output;
 // 20 200 1.0
 // 20 200 0.5
 // 13 190 0.65
-double Kp = 18;
-double Ki = 120;
-double Kd = 0.65;
+double Kp = 30;
+double Ki = 315;
+double Kd = 0.7;
 
 int samplingTime = 7;
 PID pid(&input, &output, &setpoint, Kp, Ki, Kd, DIRECT);
@@ -134,8 +134,110 @@ void setup()
  }
 }
 
+
 void loop() {
 
+  if(Serial.available()>0){
+    char msg = Serial.read();
+    switch(msg){
+      case '4':
+        Kp += 5;
+        pid.SetTunings(Kp, Ki, Kd);
+        break;
+      case '1':
+        Kp -= 5;
+        if(Kp<0)
+          Kp = 0;
+        pid.SetTunings(Kp, Ki, Kd);
+        break;
+        
+      case '5':
+        Ki += 35;
+        pid.SetTunings(Kp, Ki, Kd);
+        break;
+      case '2':
+        Ki -= 35;
+        if(Ki<0)
+          Ki = 0;
+        pid.SetTunings(Kp, Ki, Kd);
+        break;
+        
+      case '6':
+        Kd += 0.1;
+        pid.SetTunings(Kp, Ki, Kd);
+        break;
+      case '3':
+        Kd -= 0.1;
+        if(Kd<0)
+          Kd = 0;
+        pid.SetTunings(Kp, Ki, Kd);
+        break;
+
+
+
+
+
+
+        
+      case 'i':
+        Kp2 += 5;
+        pid2.SetTunings(Kp2, Ki2, Kd2);
+        break;
+      case 'k':
+        Kp2 -= 5;
+        if(Kp2<0)
+          Kp2 = 0;
+        pid2.SetTunings(Kp2, Ki2, Kd2);
+        break;
+        
+      case 'o':
+        Ki2 += 35;
+        pid2.SetTunings(Kp2, Ki2, Kd2);
+        break;
+      case 'l':
+        Ki -= 35;
+        if(Ki2<0)
+          Ki2 = 0;
+        pid2.SetTunings(Kp2, Ki2, Kd2);
+        break;
+        
+      case 'p':
+        Kd2 += 0.1;
+        pid2.SetTunings(Kp2, Ki2, Kd2);
+        break;
+      case 'm':
+        Kd2 -= 0.1;
+        if(Kd2<0)
+          Kd2 = 0;
+        pid2.SetTunings(Kp2, Ki2, Kd2);
+        break;
+
+
+
+        
+        
+      case '8':
+        setpoint += 0.1;
+        break;
+      case '0':
+        setpoint -= 0.1;
+        break;
+        
+      case '9':
+        lineBetweenTwoPids += 1;
+        break;
+      case '7':
+        lineBetweenTwoPids -= 1;
+        if(lineBetweenTwoPids<0)
+          lineBetweenTwoPids = 0;
+        break;
+        
+      case '\n':
+        break;
+    }
+  }
+  Serial.println("Kp " + String(Kp) + " Ki " + String(Ki) + " Kd " + String(Kd) + " setpoint " + String(setpoint) + " d " + String(lineBetweenTwoPids) + " Kp2 " + String(Kp2) + " Ki2 " + String(Ki2) + " Kd2 " + String(Kd2));
+        
   // Step 0: do mpu stuff
   if (!dmpReady) return;
   mpuInterrupt = false;
@@ -160,7 +262,7 @@ void loop() {
     pid.Compute();
     pid2.Compute();
     
-    if(abs(input - originalSetpoint)>delta)
+    if(abs(input - originalSetpoint)>lineBetweenTwoPids)
       motorController.move(output2, MIN_ABS_SPEED);
     else
       motorController.move(output, MIN_ABS_SPEED);
