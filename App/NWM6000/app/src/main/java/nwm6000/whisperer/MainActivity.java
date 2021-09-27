@@ -36,6 +36,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        context = this;
         senSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         senAccelerometer = senSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         senSensorManager.registerListener(this, senAccelerometer , SensorManager.SENSOR_DELAY_NORMAL);
@@ -43,7 +44,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         findBT();
         createBroadcastReceiver();
-        beginListenForData();
     }
 
 
@@ -90,9 +90,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     if (device != null) {
                         String deviceName = device.getName();
                         /*String deviceMAC = device.getAddress();*/
-                        if(deviceName!=null){
-                            if(deviceName.equals("HC-05")){
-                                Log.i("HHH", "got the device man");
+                        if(mmDevice==null){
+                            if(deviceName!=null){
+                                if(deviceName.equals("HC-05")){
+                                    Log.i("HHH", "got the device man");
+                                    //findBT();
+                                }
                             }
                         }
                     }
@@ -137,7 +140,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             {
                 Log.i("HH", "stopWorker " + stopWorker);
                 while(!stopWorker) {
-                    if(mmInputStream!=null){
+
+                    if(mmDevice==null){
+                        Log.i("HH", "mmDevice is null");
+                        break;
+                    }
+
+                    if(mmInputStream==null) {
+                        openBTWithChecks();
+                    } else {
                         try {
                             int bytesAvailable = mmInputStream.available();
                             if(bytesAvailable > 0) {
@@ -153,8 +164,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                                     handler.post(new Runnable() {
                                         public void run() {
-                                        Log.i("HH", "data " + data);
-                                        Toast.makeText(context, data, Toast.LENGTH_LONG).show();
+                                        //Log.i("HH", "data " + data);
+                                        //Toast.makeText(context, data, Toast.LENGTH_LONG).show();
                                         //onPostExecuto(data);
                                         }
                                     });
@@ -210,12 +221,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 Log.i("HH", "device " + device.getName());
                 if(device.getName().equals("HC-05")) {
                     mmDevice = device;
+                    openBTWithChecks();
+                    beginListenForData();
                     break;
                 }
             }
         }
         Log.i("HH", "Bluetooth Device Found");
-        openBTWithChecks();
     }
 
 
@@ -237,9 +249,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
         mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
         mmSocket.connect();
-        Log.i("HH", "mmOutputStream bef " + mmOutputStream);
         mmOutputStream = mmSocket.getOutputStream();
-        Log.i("HH", "mmOutputStream  afer" + mmOutputStream);
         mmInputStream = mmSocket.getInputStream();
 
         Log.i("HH", "Bluetooth Opened");
@@ -277,8 +287,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     public void spamClicked(View view) {
         try {
-            Log.i("HH", "mmOutputStream " + mmOutputStream);
-            mmOutputStream.write("0\n".getBytes());
+            //String str = "NIGGER\n";
+            //StringBuilder sb = new StringBuilder();
+            //char[] letters = str.toCharArray();
+
+            //for (char ch : letters) {
+            //    sb.append((byte) ch);
+            //};
+            //final String tess = new String(encodedBytes);
+            //Log.i("HH", "String " + tess);
+
+            Log.i("HH", "out " + "NIGGER\n".getBytes());
+            mmOutputStream.write("NIGGER\n".getBytes());
         } catch (Exception e) {
             Log.i("HH", "lol" + e.toString());
         }
