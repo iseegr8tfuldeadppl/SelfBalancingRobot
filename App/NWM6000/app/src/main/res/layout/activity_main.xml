@@ -14,23 +14,21 @@
 
     <ImageView
         android:padding="35dp"
-        android:src="@drawable/hh"
+        android:src="@drawable/nwm6000"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
-
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         android:weightSum="3">
         <RelativeLayout
             android:layout_weight="1"
-            android:layout_width="match_parent"
-            android:layout_height="0dp" >
+            android:layout_width="0dp"
+            android:layout_height="match_parent" >
 
             <com.airbnb.lottie.LottieAnimationView
-                android:rotation="90"
                 android:id="@+id/animation_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -41,17 +39,16 @@
         </RelativeLayout>
         <RelativeLayout
             android:layout_weight="1"
-            android:layout_width="match_parent"
-            android:layout_height="0dp" >
+            android:layout_width="0dp"
+            android:layout_height="match_parent" >
 
         </RelativeLayout>
         <RelativeLayout
             android:layout_weight="1"
-            android:layout_width="match_parent"
-            android:layout_height="0dp" >
+            android:layout_width="0dp"
+            android:layout_height="match_parent" >
 
             <com.airbnb.lottie.LottieAnimationView
-                android:rotation="90"
                 android:layout_centerInParent="true"
                 android:id="@+id/animation_view2"
                 android:layout_width="wrap_content"
@@ -62,20 +59,383 @@
         </RelativeLayout>
     </LinearLayout>
 
-
-    <TextView
-        android:layout_gravity="center_vertical|start"
-        android:rotation="90"
-        android:id="@+id/yes"
+    <!-- Arrow button to start/stop gyroscope streaming to robot -->
+    <FrameLayout
+        android:onClick="startGyroClicked"
+        android:paddingHorizontal="15dp"
+        android:background="@drawable/arrow_background"
+        android:clickable="true"
+        android:focusable="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="20sp"
-        android:text="niggerniggernigger"
+        android:layout_gravity="center_horizontal|bottom" >
+        <ImageView
+            android:src="@drawable/arrow"
+            android:layout_width="60dp"
+            android:layout_height="60dp" />
+    </FrameLayout>
+
+    <!-- Settings Icon -->
+    <ImageView
+        android:clickable="true"
+        android:focusable="true"
+        android:onClick="settingsOpenClicked"
+        android:layout_width="65dp"
+        android:layout_height="65dp"
+        android:src="@drawable/settings" />
+
+    <!-- Settings Body -->
+    <LinearLayout
+        android:id="@+id/settings"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="@drawable/settings_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:layout_margin="15dp" >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2">
+            <LinearLayout
+                android:gravity="center"
+                android:paddingHorizontal="15dp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:layout_weight="1">
+                <TextView
+                    android:gravity="center"
+                    android:id="@+id/P1_value"
+                    android:layout_marginHorizontal="5dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#BA1F33"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:text="50" />
+                <com.jem.rubberpicker.RubberSeekBar
+                    android:id="@+id/P1_track"
+                    android:paddingBottom="20dp"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    app:minValue="0"
+                    app:maxValue="100"
+                    app:elasticBehavior="linear"
+                    app:dampingRatio="0.4"
+                    app:stiffness="400"
+                    app:stretchRange="36dp"
+                    app:defaultThumbRadius="16dp"
+                    app:normalTrackWidth="4dp"
+                    app:highlightTrackWidth="8dp"
+                    app:normalTrackColor="@color/track_color"
+                    app:highlightTrackColor="#BA1F33"
+                    app:defaultThumbInsideColor="#CFCD5D67"
+                    app:highlightDefaultThumbOnTouchColor="#CD5D67"/>
+                <TextView
+                    android:gravity="center"
+                    android:id="@+id/i1_value"
+                    android:layout_marginHorizontal="5dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#26BF1B"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:text="50" />
+                <com.jem.rubberpicker.RubberSeekBar
+                    android:id="@+id/i1_track"
+                    android:paddingBottom="20dp"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    app:minValue="0"
+                    app:maxValue="100"
+                    app:elasticBehavior="linear"
+                    app:dampingRatio="0.4"
+                    app:stiffness="400"
+                    app:stretchRange="36dp"
+                    app:defaultThumbRadius="16dp"
+                    app:normalTrackWidth="4dp"
+                    app:highlightTrackWidth="8dp"
+                    app:normalTrackColor="@color/track_color"
+                    app:highlightTrackColor="#26BF1B"
+                    app:defaultThumbInsideColor="#CF81DF7E"
+                    app:highlightDefaultThumbOnTouchColor="#CF81DF7E"/>
+                <TextView
+                    android:gravity="center"
+                    android:id="@+id/d1_value"
+                    android:layout_marginHorizontal="5dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#253CCF"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:text="50" />
+                <com.jem.rubberpicker.RubberSeekBar
+                    android:id="@+id/d1_track"
+                    android:paddingBottom="20dp"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    app:minValue="0"
+                    app:maxValue="100"
+                    app:elasticBehavior="linear"
+                    app:dampingRatio="0.4"
+                    app:stiffness="400"
+                    app:stretchRange="36dp"
+                    app:defaultThumbRadius="16dp"
+                    app:normalTrackWidth="4dp"
+                    app:highlightTrackWidth="8dp"
+                    app:normalTrackColor="@color/track_color"
+                    app:highlightTrackColor="#253CCF"
+                    app:defaultThumbInsideColor="#CF99A2F6"
+                    app:highlightDefaultThumbOnTouchColor="#CF99A2F6"/>
+                <TextView
+                    android:gravity="center"
+                    android:id="@+id/switch_value"
+                    android:layout_marginHorizontal="5dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#CFA69A9B"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:text="50" />
+
+                <com.jem.rubberpicker.RubberSeekBar
+                    android:id="@+id/switch_track"
+                    android:paddingBottom="10dp"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    app:minValue="0"
+                    app:maxValue="100"
+                    app:elasticBehavior="linear"
+                    app:dampingRatio="0.4"
+                    app:stiffness="400"
+                    app:stretchRange="36dp"
+                    app:initialValue="50"
+                    app:defaultThumbRadius="16dp"
+                    app:normalTrackWidth="4dp"
+                    app:highlightTrackWidth="4dp"
+                    app:normalTrackColor="#605B5C"
+                    app:highlightTrackColor="#605B5C"
+                    app:defaultThumbInsideColor="#CFA69A9B"
+                    app:highlightDefaultThumbOnTouchColor="#CFA69A9B"/>
+            </LinearLayout>
+            <LinearLayout
+                android:gravity="center"
+                android:paddingHorizontal="15dp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:layout_weight="1">
+                <TextView
+                    android:gravity="center"
+                    android:id="@+id/P2_value"
+                    android:layout_marginHorizontal="5dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#BA1F33"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:text="50" />
+                <com.jem.rubberpicker.RubberSeekBar
+                    android:id="@+id/P2_track"
+                    android:paddingVertical="10dp"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    app:minValue="0"
+                    app:maxValue="100"
+                    app:elasticBehavior="linear"
+                    app:dampingRatio="0.4"
+                    app:stiffness="400"
+                    app:stretchRange="36dp"
+                    app:defaultThumbRadius="16dp"
+                    app:normalTrackWidth="4dp"
+                    app:highlightTrackWidth="8dp"
+                    app:normalTrackColor="@color/track_color"
+                    app:highlightTrackColor="#BA1F33"
+                    app:defaultThumbInsideColor="#CFCD5D67"
+                    app:highlightDefaultThumbOnTouchColor="#CD5D67"/>
+                <TextView
+                    android:gravity="center"
+                    android:id="@+id/i2_value"
+                    android:layout_marginHorizontal="5dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#26BF1B"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:text="50" />
+                <com.jem.rubberpicker.RubberSeekBar
+                    android:id="@+id/i2_track"
+                    android:paddingVertical="10dp"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    app:minValue="0"
+                    app:maxValue="100"
+                    app:elasticBehavior="linear"
+                    app:dampingRatio="0.4"
+                    app:stiffness="400"
+                    app:stretchRange="36dp"
+                    app:defaultThumbRadius="16dp"
+                    app:normalTrackWidth="4dp"
+                    app:highlightTrackWidth="8dp"
+                    app:normalTrackColor="@color/track_color"
+                    app:highlightTrackColor="#26BF1B"
+                    app:defaultThumbInsideColor="#CF81DF7E"
+                    app:highlightDefaultThumbOnTouchColor="#CF81DF7E"/>
+                <TextView
+                    android:gravity="center"
+                    android:id="@+id/d2_value"
+                    android:layout_marginHorizontal="5dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#253CCF"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:text="50" />
+                <com.jem.rubberpicker.RubberSeekBar
+                    android:id="@+id/d2_track"
+                    android:paddingVertical="10dp"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    app:minValue="0"
+                    app:maxValue="100"
+                    app:elasticBehavior="linear"
+                    app:dampingRatio="0.4"
+                    app:stiffness="400"
+                    app:stretchRange="36dp"
+                    app:defaultThumbRadius="16dp"
+                    app:normalTrackWidth="4dp"
+                    app:highlightTrackWidth="8dp"
+                    app:normalTrackColor="@color/track_color"
+                    app:highlightTrackColor="#253CCF"
+                    app:defaultThumbInsideColor="#CF99A2F6"
+                    app:highlightDefaultThumbOnTouchColor="#CF99A2F6"/>
+                <TextView
+                    android:gravity="center"
+                    android:id="@+id/balance_value"
+                    android:layout_marginHorizontal="5dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#CFA69A9B"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:text="50" />
+
+                <com.jem.rubberpicker.RubberSeekBar
+                    android:id="@+id/balance_track"
+                    android:paddingBottom="10dp"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    app:minValue="0"
+                    app:maxValue="100"
+                    app:elasticBehavior="linear"
+                    app:dampingRatio="0.4"
+                    app:stiffness="400"
+                    app:stretchRange="36dp"
+                    app:initialValue="50"
+                    app:defaultThumbRadius="16dp"
+                    app:normalTrackWidth="4dp"
+                    app:highlightTrackWidth="4dp"
+                    app:normalTrackColor="#605B5C"
+                    app:highlightTrackColor="#605B5C"
+                    app:defaultThumbInsideColor="#CFA69A9B"
+                    app:highlightDefaultThumbOnTouchColor="#CFA69A9B"/>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Gyro values preview -->
+    <TextView
+        android:layout_marginTop="10dp"
+        android:layout_gravity="center_vertical|start"
+        android:id="@+id/phone_gyro_preview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
         android:textColor="@android:color/white" />
 
-    <Button
+
+    <!--  -->
+    <LinearLayout
+        android:layout_marginTop="10dp"
+        android:layout_gravity="center_horizontal|top"
         android:layout_width="wrap_content"
-        android:text="spam"
-        android:onClick="spamClicked"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical">
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:layout_gravity="center_horizontal|top"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_marginHorizontal="5dp"
+                android:id="@+id/connected_status"
+                android:text="Not Connected"
+                android:padding="5dp"
+                android:textStyle="bold"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textColor="@android:color/holo_green_light" />
+            <TextView
+                android:onClick="connectClicked"
+                android:layout_marginHorizontal="5dp"
+                android:id="@+id/connect"
+                android:text="Connect"
+                android:padding="5dp"
+                android:background="#000"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textColor="@android:color/white" />
+            <TextView
+                android:clickable="true"
+                android:focusable="true"
+                android:onClick="sendValuesClicked"
+                android:layout_marginHorizontal="5dp"
+                android:id="@+id/send_values"
+                android:text="Send Values"
+                android:padding="5dp"
+                android:background="#000"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textColor="@android:color/white" />
+            <TextView
+                android:onClick="updateRangesClicked"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginHorizontal="5dp"
+                android:id="@+id/update_ranges"
+                android:text="Update Ranges"
+                android:padding="5dp"
+                android:background="#000"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textColor="@android:color/white" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_marginHorizontal="5dp"
+            android:id="@+id/console_replies"
+            android:padding="5dp"
+            android:textStyle="bold"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
 </FrameLayout>

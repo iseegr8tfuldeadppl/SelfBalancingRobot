@@ -4,6 +4,11 @@
 #include <LMotorController.h>
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
+#include <SoftwareSerial.h>
+
+// bluetooth communication
+SoftwareSerial mySerial(A2, A3); // RX, TX
+String msg = "";
 
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
  #include "Wire.h"
@@ -27,8 +32,8 @@ VectorFloat gravity; // [x, y, z] gravity vector
 float ypr[3]; // [yaw, pitch, roll] yaw/pitch/roll container and gravity vector
 
 //PID
-double originalSetpoint = 173.85; // 181
-int lineBetweenTwoPids = 8; // 15
+double originalSetpoint = 190.05; // 181
+int lineBetweenTwoPids = 11.304; // 15
 //PID1
 double setpoint = originalSetpoint;
 double movingAngleOffset = 0.1;
@@ -36,9 +41,9 @@ double input, output;
 // 20 200 1.0
 // 20 200 0.5
 // 13 190 0.65
-double Kp = 30; // 20
-double Ki = 280; // 140
-double Kd = 0.8; // 0.7
+double Kp = 58; // 30
+double Ki = 780; // 280
+double Kd = 0.95; // 0.8
 
 int samplingTime = 7; // 7
 PID pid(&input, &output, &setpoint, Kp, Ki, Kd, DIRECT);
@@ -49,9 +54,9 @@ PID pid(&input, &output, &setpoint, Kp, Ki, Kd, DIRECT);
 double setpoint2 = originalSetpoint;
 double movingAngleOffset2 = 0.1;
 double input2, output2;
-double Kp2 = 135;
-double Ki2 = 525;
-double Kd2 = 9.10;
+double Kp2 = 110; // 135
+double Ki2 = 380; // 525
+double Kd2 = 9.10; // 9.10
 
 int samplingTime2 = 7;
 PID pid2(&input2, &output2, &setpoint2, Kp2, Ki2, Kd2, DIRECT);
@@ -70,16 +75,80 @@ int ENB = 10;
 LMotorController motorController(ENA, IN1, IN2, ENB, IN3, IN4, motorSpeedFactorLeft, motorSpeedFactorRight);
 
 volatile bool mpuInterrupt = false; // indicates whether MPU interrupt pin has gone high
-void dmpDataReady()
-{
+void dmpDataReady(){
  mpuInterrupt = true;
 }
 
+float driving_delta=0.0;
+boolean driving = false;
+void treat_command(){
+  //Serial.println("Received msg " + msg);
 
-void setup()
-{
+  if(msg=="")
+    return;
+  
+  String command = getValue(msg, ' ', 0);
+  if(command=="PID"){
+    String index = getValue(msg, ' ', 1);
+    double value = getValue(msg, ' ', 2).toDouble();
+    if(index=="0"){
+      Kp = value;
+      pid.SetTunings(Kp, Ki, Kd);
+    } else if(index=="1"){
+      Ki = value;
+      pid.SetTunings(Kp, Ki, Kd);
+    } else if(index=="2"){
+      Kd = value;
+      pid.SetTunings(Kp, Ki, Kd);
+      
+    } else if(index=="3"){
+      Kp2 = value;
+      pid2.SetTunings(Kp2, Ki2, Kd2);
+    } else if(index=="4"){
+      Ki2 = value;
+      pid2.SetTunings(Kp2, Ki2, Kd2);
+    } else if(index=="5"){
+      Kd2 = value;
+      pid2.SetTunings(Kp2, Ki2, Kd2);
+    }
+  } else if(command=="B"){ // this is to set the BALANCE angle
+    originalSetpoint = getValue(msg, ' ', 1).toDouble();
+    setpoint = originalSetpoint;
+  } else if(command=="S"){ // this is the angle delta at which we SWITCH from pid1 to pid2 (default: 7)
+    lineBetweenTwoPids = getValue(msg, ' ', 1).toInt();
+  } else if(command=="D"){ // this is the offset DELTA that is driven by the gyroscope of the phone
+    driving_delta = getValue(msg, ' ', 2).toDouble();
+  } else if(command=="DON"){ // this is to enable the offset DELTA that is driven by the gyroscope of the phone
+    driving_delta = 0.0;
+    driving = true;
+  } else if(command=="DOFF"){ // this is to disable the offset DELTA that is driven by the gyroscope of the phone
+    driving_delta = 0.0;
+    driving = false;
+  }
+  
+}
+
+
+String getValue(String data, char separator, int index) {
+  int found = 0;
+  int strIndex[] = { 0, -1 };
+  int maxIndex = data.length() - 1;
+
+  for (int i = 0; i <= maxIndex && found <= index; i++) {
+    if (data.charAt(i) == separator || i == maxIndex) {
+      found++;
+      strIndex[0] = strIndex[1] + 1;
+      strIndex[1] = (i == maxIndex) ? i + 1 : i;
+    }
+  }
+  return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
+}
+
+void setup(){
   pinMode(LED_BUILTIN, OUTPUT);
-  Serial.begin(115200);
+  //Serial.begin(115200);
+  mySerial.begin(9600);
+    
  // join I2C bus (I2Cdev library doesn't do this automatically)
  #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
  Wire.begin();
@@ -128,15 +197,33 @@ void setup()
    // 1 = initial memory load failed
    // 2 = DMP configuration updates failed
    // (if it's going to break, usually the code will be 1)
-   Serial.print(F("DMP Initialization failed (code "));
-   Serial.print(devStatus);
-   Serial.println(F(")"));
+   //Serial.print(F("DMP Initialization failed (code "));
+   //Serial.print(devStatus);
+   //Serial.println(F(")"));
  }
 }
 
 
 void loop() {
+  if(mySerial.available()){
+    char ah = mySerial.read();
+    if(ah=='\n'){
+      treat_command();
+      msg = "";
+    } else {
+      msg.concat(ah);
+    }
+  }
 
+  // apply driving delta if we're driving
+  if(driving){
+    setpoint = originalSetpoint + driving_delta;
+  } else {
+    driving_delta = 0.0;
+    setpoint = originalSetpoint;
+  }
+
+  /*
   if(Serial.available()>0){
     char msg = Serial.read();
     switch(msg){
@@ -174,11 +261,6 @@ void loop() {
         break;
 
 
-
-
-
-
-        
       case 'i':
         Kp2 += 5;
         pid2.SetTunings(Kp2, Ki2, Kd2);
@@ -213,14 +295,13 @@ void loop() {
         break;
 
 
-
-        
-        
       case '8':
-        setpoint += 0.1;
+        originalSetpoint += 0.1;
+        setpoint = originalSetpoint;
         break;
       case '0':
-        setpoint -= 0.1;
+        originalSetpoint -= 0.1;
+        setpoint = originalSetpoint;
         break;
         
       case '9':
@@ -236,6 +317,8 @@ void loop() {
         break;
     }
   }
+  */
+  
   // Step 0: do mpu stuff
   if (!dmpReady) return;
   mpuInterrupt = false;
@@ -255,7 +338,6 @@ void loop() {
     input = ypr[1] * 180/M_PI + 180;
     input2 = input;
 
-
     // Step 2: calculate pid values
     pid.Compute();
     pid2.Compute();
@@ -266,12 +348,15 @@ void loop() {
       motorController.move(output, MIN_ABS_SPEED);
 
     // a simple led  direction indicator
+    /*
     if(input>originalSetpoint)
       digitalWrite(LED_BUILTIN, HIGH);
     else 
       digitalWrite(LED_BUILTIN, LOW); 
+    */
 
-  Serial.println(String(input) + " " + String(setpoint) + " | " + String(Kp) + " " + String(Ki) + " " + String(Kd) + " | " + String(lineBetweenTwoPids) + " " + String(Kp2) + " " + String(Ki2) + " " + String(Kd2));
-  //Serial.println(input);
+    //Serial.println(String(input) + " " + String(setpoint) + " | " + String(pid.GetKp()) + " " + String(pid.GetKi()) + " " + String(pid.GetKd()) + " | " + String(lineBetweenTwoPids) + " " + String(pid2.GetKp()) + " " + String(pid2.GetKi()) + " " + String(pid2.GetKd()));
+    //mySerial.println(String(input) + " " + String(setpoint) + " | " + String(pid.GetKp()) + " " + String(pid.GetKi()) + " " + String(pid.GetKd()) + " | " + String(lineBetweenTwoPids) + " " + String(pid2.GetKp()) + " " + String(pid2.GetKi()) + " " + String(pid2.GetKd()));
+    //mySerial.println(input);
   }
 }

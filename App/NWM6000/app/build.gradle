@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "nwm6000.whisperer"
-        minSdkVersion 16
+        minSdkVersion 21
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
@@ -26,6 +26,7 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
+    implementation 'com.github.Chrisvin:RubberPicker:v1.5'
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.airbnb.android:lottie:3.7.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
