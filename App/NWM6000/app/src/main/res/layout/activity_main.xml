@@ -359,9 +359,8 @@
         android:textColor="@android:color/white" />
 
 
-    <!--  -->
+    <!-- Top Buttons -->
     <LinearLayout
-        android:layout_marginTop="10dp"
         android:layout_gravity="center_horizontal|top"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -384,12 +383,38 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
-                android:textColor="@android:color/holo_green_light" />
+                android:textColor="@color/not_connected" />
             <TextView
                 android:onClick="connectClicked"
                 android:layout_marginHorizontal="5dp"
                 android:id="@+id/connect"
                 android:text="Connect"
+                android:padding="5dp"
+                android:background="#000"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textColor="@android:color/white" />
+            <TextView
+                android:onClick="updateRangesClicked"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginHorizontal="5dp"
+                android:id="@+id/update_ranges"
+                android:text="Update Ranges"
+                android:padding="5dp"
+                android:background="#000"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textColor="@android:color/white" />
+            <TextView
+                android:onClick="requestValuesClicked"
+                android:layout_marginHorizontal="5dp"
+                android:id="@+id/requestValues"
+                android:text="Get Values"
                 android:padding="5dp"
                 android:background="#000"
                 android:clickable="true"
@@ -405,19 +430,6 @@
                 android:layout_marginHorizontal="5dp"
                 android:id="@+id/send_values"
                 android:text="Send Values"
-                android:padding="5dp"
-                android:background="#000"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:textColor="@android:color/white" />
-            <TextView
-                android:onClick="updateRangesClicked"
-                android:clickable="true"
-                android:focusable="true"
-                android:layout_marginHorizontal="5dp"
-                android:id="@+id/update_ranges"
-                android:text="Update Ranges"
                 android:padding="5dp"
                 android:background="#000"
                 android:layout_width="wrap_content"

@@ -4,4 +4,8 @@
     <color name="colorPrimaryDark">#000000</color>
     <color name="colorAccent">#03DAC5</color>
     <color name="track_color">#AAAAAA</color>
+    <color name="connecting">#FFFFFF</color>
+    <color name="not_connected">#F62E2E</color>
+    <color name="failed">#F18818</color>
+    <color name="connected">#ff99cc00</color>
 </resources>

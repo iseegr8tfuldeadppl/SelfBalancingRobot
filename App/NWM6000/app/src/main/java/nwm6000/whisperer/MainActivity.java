@@ -1,7 +1,6 @@
 package nwm6000.whisperer;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -21,11 +20,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.jem.rubberpicker.RubberSeekBar;
-
-import org.w3c.dom.Text;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -36,14 +31,39 @@ import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    TextView phone_gyro_preview, connected_status, console_replies;
+    List<TextView> value_elements = new ArrayList<>();
+    TextView phone_gyro_preview, connected_status, connect, console_replies, requestValues, send_values;
     List<Float> values_to_send = new ArrayList<>();
-    int balance_track_delta_on_each_side = 5;
-    int additional_parameters = 2;
+    LinearLayout settings;
+    int additional_parameters = 2, balance_track_delta_on_each_side = 5;
     List<RubberSeekBar> track_elements = new ArrayList<>();
-    List<Float> mins = new ArrayList<>();
-    List<Float> maxes = new ArrayList<>();
-    public MainActivity() {}
+    List<Float> mins = new ArrayList<>(), maxes = new ArrayList<>();
+    private boolean settings_open = false;
+    private boolean connected = false;
+    private boolean running = false;
+    final Handler handler2 = new Handler();
+    final byte delimiter = 10; //This is the ASCII code for a newline character
+
+    private Context context;
+    BluetoothAdapter mBluetoothAdapter;
+    BluetoothSocket mmSocket;
+    BluetoothDevice mmDevice;
+    OutputStream mmOutputStream;
+    InputStream mmInputStream;
+    Thread workerThread;
+    byte[] readBuffer;
+    int readBufferPosition;
+
+    UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //Standard SerialPortService ID
+    private SensorManager senSensorManager;
+    private Sensor senAccelerometer;
+    private float x=(float) 0.0, y=(float) 0.0, z=(float) 0.0;
+    private float initial_x=(float) 0.0, initial_y=(float) 0.0, initial_z=(float) 0.0;
+
+    private boolean gyro_stream_on = false;
+    private boolean requested_values = false;
+    private boolean state_of_connect_button = false;
+    private final int min_max_deltas = 20;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +76,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         senSensorManager.registerListener(this, senAccelerometer , SensorManager.SENSOR_DELAY_NORMAL);
         phone_gyro_preview =findViewById(R.id.phone_gyro_preview);
         connected_status =findViewById(R.id.connected_status);
+        requestValues =findViewById(R.id.requestValues);
+        connect =findViewById(R.id.connect);
+        send_values =findViewById(R.id.send_values);
         console_replies =findViewById(R.id.console_replies);
+        settings = findViewById(R.id.settings);
 
         connectedStatus();
         createBroadcastReceiver();
@@ -64,7 +88,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         final SharedPreferences prefs = this.getSharedPreferences("nwm6000.whisperer", Context.MODE_PRIVATE);
         final SharedPreferences.Editor editor = prefs.edit();
 
-        final List<TextView> value_elements = new ArrayList<>();
         value_elements.add((TextView) findViewById(R.id.P1_value));
         value_elements.add((TextView) findViewById(R.id.i1_value));
         value_elements.add((TextView) findViewById(R.id.d1_value));
@@ -173,15 +196,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         value_elements.get(finalJ).setText(String.valueOf(values_to_send.get(finalJ)));
 
                         // display values in logcat temporarily
-                        Log.i("HH", strings.get(finalJ) + " has value " + values_to_send.get(finalJ));
-                        print(strings.get(finalJ) + " has value " + values_to_send.get(finalJ));
+                        //Log.i("HH", strings.get(finalJ) + " has value " + values_to_send.get(finalJ));
+                        //print(strings.get(finalJ) + " has value " + values_to_send.get(finalJ));
                     }
                 }
 
                 @Override public void onStartTrackingTouch(RubberSeekBar rubberSeekBar) {}
                 @Override public void onStopTrackingTouch(RubberSeekBar rubberSeekBar) {
-                    Log.i("HH", "Stopped moving tracker number " + finalJ);
-
 
                     // send updated value to arduino
                     if(finalJ==defaults.size()-1){
@@ -202,51 +223,62 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    private boolean settings_open = false;
     @Override
     public void onBackPressed() {
         if(settings_open){
-            LinearLayout settings = findViewById(R.id.settings);
-            settings.setVisibility(View.GONE);
-            settings_open = false;
+            SettingsPage(false);
         } else {
             super.onBackPressed();
         }
+    }
+
+    private void SettingsPage(boolean show) {
+        if(show){
+            settings.setVisibility(View.VISIBLE);
+            connect.setVisibility(View.INVISIBLE);
+            requestValues.setVisibility(View.INVISIBLE);
+            send_values.setVisibility(View.INVISIBLE);
+            console_replies.setVisibility(View.INVISIBLE);
+        } else {
+            settings.setVisibility(View.GONE);
+            connect.setVisibility(View.VISIBLE);
+            requestValues.setVisibility(View.VISIBLE);
+            send_values.setVisibility(View.VISIBLE);
+            console_replies.setVisibility(View.VISIBLE);
+        }
+        settings_open = show;
     }
 
     void print(Object log){
         Toast.makeText(context, String.valueOf(log), Toast.LENGTH_LONG).show();
     }
 
-
     private void openBTWithChecks() {
         if(mmDevice!=null){
             try {
                 boolean good = openBT();
                 if(!good){
-                    Log.i("HH", "bluetooth is off");
-                    if(mBluetoothAdapter.isEnabled())
-                        mBluetoothAdapter.startDiscovery();
+                    //if(mBluetoothAdapter.isEnabled())
+                        //mBluetoothAdapter.startDiscovery();
                 }
             } catch (IOException e) {
                 Log.i("HH", "e " + e.toString());
-                if(mBluetoothAdapter.isEnabled())
-                    mBluetoothAdapter.startDiscovery();
+                //if(mBluetoothAdapter.isEnabled())
+                    //mBluetoothAdapter.startDiscovery();
             }
         } else {
             Log.i("HH", "mmdevice is null");
-            if(mBluetoothAdapter.isEnabled())
-                mBluetoothAdapter.startDiscovery();
+            //if(mBluetoothAdapter.isEnabled())
+                //mBluetoothAdapter.startDiscovery();
         }
     }
 
-    private boolean connected = false;
     private void createBroadcastReceiver() {
         IntentFilter filter = new IntentFilter();
-        filter.addAction(BluetoothDevice.ACTION_FOUND);
+        //filter.addAction(BluetoothDevice.ACTION_FOUND);
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-        filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        //filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
 
         registerReceiver(receiver, filter);
     }
@@ -265,7 +297,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         if(mmDevice==null){
                             if(deviceName!=null){
                                 if(deviceName.equals("HC-05")){
-                                    Log.i("HHH", "got the device man");
+                                    Log.i("HHH", "Found the devicec");
                                     //findBT();
                                 }
                             }
@@ -279,15 +311,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 case BluetoothDevice.ACTION_ACL_DISCONNECTED:
                     Log.i("HHH", "disconnected");
                     connected = false;
-                    mBluetoothAdapter.startDiscovery();
+                    if(mBluetoothAdapter==null)
+                        return;
+                    //mBluetoothAdapter.startDiscovery();
                     /*stopSelfNo();*/
                     break;
                 case BluetoothAdapter.ACTION_STATE_CHANGED:
                     Log.i("HH", "bluetooth ACTION_STATE_CHANGED called mate");
+                    if(mBluetoothAdapter==null)
+                        return;
+
                     if (mBluetoothAdapter.getState() == BluetoothAdapter.STATE_ON) {
                         // The user bluetooth is turning off yet, but it is not disabled yet.
                         Log.i("HH", "bluetooth on");
-                        mBluetoothAdapter.startDiscovery();
+                        //mBluetoothAdapter.startDiscovery();
 
                     } else if (mBluetoothAdapter.getState() == BluetoothAdapter.STATE_OFF) {
                         Log.i("HH", "bluetooth off");
@@ -298,91 +335,127 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     };
 
-    private boolean running = false;
-    final Handler handler2 = new Handler();
     void beginListenForData()  {
 
-        if(running)
-            return;
-
-        /*final Handler handler = new Handler();*/
-        final byte delimiter = 10; //This is the ASCII code for a newline character
-
-        stopWorker = false;
         readBufferPosition = 0;
         readBuffer = new byte[1024];
-        workerThread = new Thread(new Runnable()
-        {
-            public void run()
-            {
-                stopWorker = false;
+        workerThread = new Thread(new Runnable(){
+            public void run(){
                 running = true;
-                while(!stopWorker) {
+                while(running) {
 
                     if(mmDevice==null){
                         Log.i("HH", "mmDevice is null");
                         break;
                     }
 
-                    if(mmInputStream==null) {
-                        openBTWithChecks();
-                    } else {
-                        try {
-                            int bytesAvailable = mmInputStream.available();
-                            if(bytesAvailable > 0) {
-                                Log.i("HH", "bytesAvailable " + bytesAvailable);
-                                byte[] packetBytes = new byte[bytesAvailable];
-                                mmInputStream.read(packetBytes);
-                                for(int i=0; i<bytesAvailable; i++) {
-                                    byte b = packetBytes[i];
-                                    if(b == delimiter) {
-                                        byte[] encodedBytes = new byte[readBufferPosition];
-                                        System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
-                                        final String data = new String(encodedBytes, "US-ASCII");
-                                        readBufferPosition = 0;
+                    try {
+                        int bytesAvailable = mmInputStream.available();
+                        connected = true;
+                        if(bytesAvailable > 0) {
+                            byte[] packetBytes = new byte[bytesAvailable];
+                            mmInputStream.read(packetBytes);
+                            for(int i=0; i<bytesAvailable; i++) {
+                                byte b = packetBytes[i];
+                                if(b == delimiter) {
+                                    byte[] encodedBytes = new byte[readBufferPosition];
+                                    System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
+                                    final String data = new String(encodedBytes, "US-ASCII");
+                                    readBufferPosition = 0;
 
-                                    handler2.post(new Runnable() {
-                                        public void run() {
-                                        //Log.i("HH", "data " + data);
-                                        console_replies.setText(data);
-                                        //Toast.makeText(context, data, Toast.LENGTH_LONG).show();
-                                        //onPostExecuto(data);
-                                        }
-                                    });
-                                    } else {
-                                        readBuffer[readBufferPosition++] = b;
+                                handler2.post(new Runnable() {
+                                    public void run() {
+                                    //Log.i("HH", "data " + data);
+                                    console_replies.setText(data);
+                                    treat_robottu_msg(data);
+                                    //onPostExecuto(data);
                                     }
+                                });
+                                } else {
+                                    readBuffer[readBufferPosition++] = b;
                                 }
                             }
-                        } catch (IOException e) {
-                            /*if(try_to_reconnect())
-                                break;*/
-                            connected = false;
-                            Log.i("HH", "reading loop crash " + e.toString());
-                            mmSocket = null;
-                            break;
                         }
+                    } catch (IOException e) {
+                        running = false;
+                        /*if(try_to_reconnect())
+                            break;*/
+                        requested_values = false;
+                        Log.i("HH", "reading loop crash " + e.toString());
+
+                        mBluetoothAdapter = null;
+                        mmSocket = null;
+                        mmDevice = null;
+                        mmOutputStream = null;
+                        mmInputStream = null;
+
+                        handler2.post(new Runnable() {
+                            public void run() {
+                                connected_status.setText("Failed: Socket");
+                                connected_status.setTextColor(getResources().getColor(R.color.failed));
+                                //onPostExecuto(data);
+                            }
+                        });
+                    } catch (Exception e2) {
+                        running = false;
+                        requested_values = false;
+                        Log.i("HH", "reading loop crash " + e2.toString());
+
+                        handler2.post(new Runnable() {
+                            public void run() {
+                                connected_status.setText("Failed: Exception");
+                                connected_status.setTextColor(getResources().getColor(R.color.failed));
+                                //onPostExecuto(data);
+                            }
+                        });
                     }
                 }
+                connected = false;
 
-                running = false;
             }
         });
 
         workerThread.start();
     }
 
-    private Context context;
-    private Intent intent;
-    BluetoothAdapter mBluetoothAdapter;
-    BluetoothSocket mmSocket;
-    BluetoothDevice mmDevice;
-    OutputStream mmOutputStream;
-    InputStream mmInputStream;
-    Thread workerThread;
-    byte[] readBuffer;
-    int readBufferPosition;
-    volatile boolean stopWorker;
+    private void treat_robottu_msg(String data) {
+        Log.i("HH", "data " + data);
+        if(data.isEmpty())
+            return;
+
+        String[] parts = data.split(" ");
+
+        switch(parts[0]){
+            case "VALUES":
+                int track_elements_size = track_elements.size();
+                for(int i=0; i<track_elements_size-additional_parameters; i++){
+                    float value = (float) Double.parseDouble(parts[i+1]);
+                    int value_in_percent = percent_from_value(i, value);
+                    values_to_send.set(i, value);
+                    track_elements.get(i).setCurrentValue(value_in_percent);
+                    value_elements.get(i).setText(String.valueOf(values_to_send.get(i)));
+                }
+
+                float switch_value = (float) Double.parseDouble(parts[track_elements_size+1-2]);
+                int switch_value_in_percent = percent_from_value(track_elements_size-2, switch_value);
+                values_to_send.set(track_elements_size-2, switch_value);
+                track_elements.get(track_elements_size-2).setCurrentValue(switch_value_in_percent);
+                value_elements.get(track_elements_size-2).setText(String.valueOf(values_to_send.get(track_elements_size-2)));
+
+                float balance_value = (float) Double.parseDouble(parts[track_elements_size+1-1]);
+                int balance_value_in_percent = percent_from_value(track_elements_size-1, balance_value);
+                values_to_send.set(track_elements_size-1, balance_value);
+                track_elements.get(track_elements_size-1).setCurrentValue(balance_value_in_percent);
+                value_elements.get(track_elements_size-1).setText(String.valueOf(values_to_send.get(track_elements_size-1)));
+
+                updateRangesClicked(null);
+                break;
+            default:
+                console_replies.setText("Command" + parts[0] + " unknown");
+                break;
+        }
+
+    }
 
     void findBT() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -395,31 +468,26 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             Log.i("HH", "bluetooth is off");
             return;
         }
-        Log.i("HH", "start discovery");
-        mBluetoothAdapter.startDiscovery();
+        //Log.i("HH", "start discovery");
+        //mBluetoothAdapter.startDiscovery();
 
-        Log.i("HH", "done");
         Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-        Log.i("HH", "pairedDevices.size() " + pairedDevices.size());
         if(pairedDevices.size() > 0) {
             for(BluetoothDevice device : pairedDevices) {
                 Log.i("HH", "device " + device.getName());
                 if(device.getName().equals("HC-05")) {
                     mmDevice = device;
                     openBTWithChecks();
-                    beginListenForData();
                     break;
                 }
             }
         }
     }
 
+    boolean openBT() throws IOException{
 
-    UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //Standard SerialPortService ID
-    boolean openBT() throws IOException
-    {
-        if(!mBluetoothAdapter.isEnabled())
-        {
+
+        if(!mBluetoothAdapter.isEnabled()){
             Log.i("HH", "bluetooth is off");
             return false;
         }
@@ -427,16 +495,28 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         try{
             if(mmSocket!=null){
                 mmSocket.close();
+                Log.i("HH", "closed socket");
+                mmSocket = null;
             }
         } catch(Exception e){
             Log.i("HH", "failed closing " + e.toString());
         }
-        mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
+
+        if(mmDevice==null){
+            Log.i("HH", "device is null goign back to start");
+            findBT();
+            return false;
+        }
+
+        if(mmSocket==null)
+            mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
         mmSocket.connect();
+        Log.i("HH", "connected socket");
         mmOutputStream = mmSocket.getOutputStream();
         mmInputStream = mmSocket.getInputStream();
 
         Log.i("HH", "Bluetooth Opened");
+        beginListenForData();
         return true;
     }
 
@@ -444,16 +524,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onPause();
         senSensorManager.unregisterListener(this);
     }
+
     protected void onResume() {
         super.onResume();
         senSensorManager.registerListener(this, senAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
-    private SensorManager senSensorManager;
-    private Sensor senAccelerometer;
-
-    private float x=(float) 0.0, y=(float) 0.0, z=(float) 0.0;
-    private float initial_x=(float) 0.0, initial_y=(float) 0.0, initial_z=(float) 0.0;
     @Override
     public void onSensorChanged(SensorEvent event) {
         Sensor mySensor = event.sensor;
@@ -463,10 +539,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             y = event.values[1];
             z = event.values[2];
             phone_gyro_preview.setText("x " + x + "\ny " + y + "\nz " + z);
-            if(gyro_stream_on)
-                sendCommand("D " + ((y - initial_y)) + " " + (z - initial_z));
+
+            if(gyro_stream_on){
+
+                int ys = Math.round(y - initial_y);
+                int zs  = Math.round(z  - initial_z);
+
+                if(ys!=previous_y || zs!=previous_z)
+                    sendCommand("D " + ys + " " + zs);
+
+                previous_y = ys;
+                previous_z  = zs;
+
+            }
         }
     }
+    private int previous_y, previous_z;
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
@@ -483,18 +571,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     public void settingsOpenClicked(View view) {
-        LinearLayout settings = findViewById(R.id.settings);
-        settings.setVisibility(View.VISIBLE);
-        settings_open = true;
+        SettingsPage(true);
     }
 
-    private boolean gyro_stream_on = false;
     public void startGyroClicked(View view) {
         if(gyro_stream_on){
-            sendCommand("DON");
+            sendCommand("DOFF");
             view.setBackground(getResources().getDrawable(R.drawable.arrow_background));
         } else {
-            sendCommand("DOFF");
+            sendCommand("DON");
             initial_x = x;
             initial_y = y;
             initial_z = z;
@@ -504,28 +589,42 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         gyro_stream_on = !gyro_stream_on;
     }
 
-
     public void connectedStatus() {
         final Handler handler = new Handler();
         new Thread(new Runnable() {
             @Override
             public void run() {
                 while(true){
+
                     if(connected){
+
+                        // request values from the robot but only after outputstream is ready
+                        /*
+                        if(!requested_values){
+                            if(mmOutputStream!=null){
+                                requested_values = true;
+                                sendCommand("V");
+                            }
+                        }
+                        */
+
                         if(!state_of_connect_button){
                             state_of_connect_button = true;
                             handler.post(new Runnable() {
                                 public void run() {
                                     connected_status.setText("Connected");
+                                    connected_status.setTextColor(getResources().getColor(R.color.connected));
                                 }
                             });
                         }
                     } else {
+                        requested_values = false;
                         if(state_of_connect_button){
                             state_of_connect_button = false;
                             handler.post(new Runnable() {
                                 public void run() {
                                     connected_status.setText("Not Connected");
+                                    connected_status.setTextColor(getResources().getColor(R.color.not_connected));
                                 }
                             });
                         }
@@ -535,8 +634,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }).start();
     }
 
-    private boolean state_of_connect_button = false;
     public void connectClicked(View view) {
+        connected_status.setText("Connecting");
+        requested_values = false;
+        connected_status.setTextColor(getResources().getColor(R.color.connecting));
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -554,7 +655,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         sendCommand("B " + values_to_send.get(values_to_send.size()-1));
     }
 
-    private int min_max_deltas = 20;
     public void updateRangesClicked(View view) {
         int balance_index = mins.size()-1;
         mins.set(balance_index, values_to_send.get(balance_index) - balance_track_delta_on_each_side);
@@ -566,11 +666,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         else if(values_to_send.get(balance_index) < mins.get(balance_index))
             values_to_send.set(balance_index, mins.get(balance_index));
 
-        int value_in_percent = (int) (( values_to_send.get(balance_index) - mins.get(balance_index) ) * 100 / (maxes.get(balance_index)-mins.get(balance_index)));
-        if(value_in_percent>100)
-            value_in_percent = 100;
-        else if(value_in_percent<0)
-            value_in_percent = 0;
+        int value_in_percent = percent_from_value(balance_index, values_to_send.get(balance_index));
+
         track_elements.get(balance_index).setCurrentValue(value_in_percent);
 
 
@@ -591,5 +688,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         else if(value_in_percent<0)
             value_in_percent = 0;
         track_elements.get(switch_index).setCurrentValue(value_in_percent);
+    }
+
+    private int percent_from_value(int index, Float aFloat) {
+        int value_in_percent = (int) (( aFloat - mins.get(index) ) * 100 / (maxes.get(index)-mins.get(index)));
+        if(value_in_percent>100)
+            value_in_percent = 100;
+        else if(value_in_percent<0)
+            value_in_percent = 0;
+        return value_in_percent;
+    }
+
+    public void requestValuesClicked(View view) {
+        sendCommand("VALUES");
     }
 }
