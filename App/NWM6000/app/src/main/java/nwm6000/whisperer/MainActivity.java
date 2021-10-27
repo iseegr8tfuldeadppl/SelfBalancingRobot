@@ -17,9 +17,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
 import com.jem.rubberpicker.RubberSeekBar;
 import java.io.IOException;
 import java.io.InputStream;
@@ -221,6 +224,36 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 }
             });
         }
+
+
+
+
+        ImageView background = findViewById(R.id.background);
+        try {
+            Glide.with(this).load(R.drawable.nig).into(background);
+        } catch (Exception ignored) {
+            background.setImageDrawable(getResources().getDrawable(R.drawable.nig));
+        }
+        ImageView robot = findViewById(R.id.robot);
+        try {
+            Glide.with(this).load(R.drawable.nwm6000).into(robot);
+        } catch (Exception ignored) {
+            robot.setImageDrawable(getResources().getDrawable(R.drawable.nwm6000));
+        }
+        ImageView arrow = findViewById(R.id.arrow);
+        try {
+            Glide.with(this).load(R.drawable.arrow).into(arrow);
+        } catch (Exception ignored) {
+            arrow.setImageDrawable(getResources().getDrawable(R.drawable.arrow));
+        }
+        ImageView settings = findViewById(R.id.settingss);
+        try {
+            Glide.with(this).load(R.drawable.settings).into(settings);
+        } catch (Exception ignored) {
+            settings.setImageDrawable(getResources().getDrawable(R.drawable.settings));
+        }
+
+
     }
 
     @Override

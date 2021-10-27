@@ -26,6 +26,8 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.8.0'
+    implementation 'com.github.bumptech.glide:glide:4.8.0'
     implementation 'com.github.Chrisvin:RubberPicker:v1.5'
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.airbnb.android:lottie:3.7.0'

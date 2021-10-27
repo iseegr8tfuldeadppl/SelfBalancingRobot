@@ -24,6 +24,12 @@ LMotorController::LMotorController(int ena, int in1, int in2, int enb, int in3, 
 }
 
 
+void LMotorController::reorient(int leftSpeed, int rightSpeed)
+{
+    _motorAConst = leftSpeed;
+    _motorBConst = rightSpeed;
+}
+
 void LMotorController::move(int leftSpeed, int rightSpeed, int minAbsSpeed)
 {
     if (rightSpeed < 0)

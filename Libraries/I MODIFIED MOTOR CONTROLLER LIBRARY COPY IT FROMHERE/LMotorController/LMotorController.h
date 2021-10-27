@@ -16,8 +16,9 @@ public:
     void move(int leftSpeed, int rightSpeed, int minAbsSpeed);
     void move(int speed);
     void move(int speed, int minAbsSpeed);
-    void turnLeft(int speed, bool kick);
-    void turnRight(int speed, bool kick);
+    void turnLeft(int speed, int minAbsSpeed);
+    void turnRight(int speed, int minAbsSpeed);
+    void reorient(int leftSpeed, int rightSpeed);
     void stopMoving();
 };
 

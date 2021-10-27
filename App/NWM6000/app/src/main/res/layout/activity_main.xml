@@ -7,14 +7,14 @@
     tools:context=".MainActivity">
 
     <ImageView
+        android:id="@+id/background"
         android:scaleType="centerCrop"
-        android:src="@drawable/nig"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
     <ImageView
+        android:id="@+id/robot"
         android:padding="35dp"
-        android:src="@drawable/nwm6000"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
@@ -70,7 +70,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal|bottom" >
         <ImageView
-            android:src="@drawable/arrow"
+            android:id="@+id/arrow"
             android:layout_width="60dp"
             android:layout_height="60dp" />
     </FrameLayout>
@@ -79,10 +79,10 @@
     <ImageView
         android:clickable="true"
         android:focusable="true"
+        android:id="@+id/settingss"
         android:onClick="settingsOpenClicked"
         android:layout_width="65dp"
-        android:layout_height="65dp"
-        android:src="@drawable/settings" />
+        android:layout_height="65dp"/>
 
     <!-- Settings Body -->
     <LinearLayout

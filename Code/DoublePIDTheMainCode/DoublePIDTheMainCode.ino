@@ -33,15 +33,15 @@ VectorFloat gravity; // [x, y, z] gravity vector
 float ypr[3]; // [yaw, pitch, roll] yaw/pitch/roll container and gravity vector
 
 //PID
-double originalSetpoint = 181.25; // 181
-int lineBetweenTwoPids = 7; // 15
+double originalSetpoint = 181.45; // 181
+int lineBetweenTwoPids = 8.36; // 15
 //PID1
 double setpoint = originalSetpoint;
 double movingAngleOffset = 0.1;
 double input, output;
-double Kp = 30; // 30
-double Ki = 280; // 280
-double Kd = 0.8; // 0.8
+double Kp = 44;
+double Ki = 340;
+double Kd = 0.7;
 
 int samplingTime = 7; // 7
 PID pid(&input, &output, &setpoint, Kp, Ki, Kd, DIRECT);
@@ -59,7 +59,7 @@ PID pid2(&input2, &output2, &setpoint2, Kp2, Ki2, Kd2, DIRECT);
 
 
 double motorSpeedFactorLeft = 1.0;
-double motorSpeedFactorRight = 0.9;
+double motorSpeedFactorRight = 1.0;
 
 //MOTOR CONTROLLER
 int ENA = 5;
@@ -76,7 +76,7 @@ void dmpDataReady() {
 }
 
 String values_to_send = "";
-float driving_delta = 0.0;
+float driving_delta = 0.0, reorient_delta = 0.0;
 boolean driving = false;
 void treat_command() {
   Serial.println(msg);
@@ -122,11 +122,17 @@ void treat_command() {
     EEPROM.put( 70, lineBetweenTwoPids );
   } else if (command == "D") { // this is the offset DELTA that is driven by the gyroscope of the phone
     driving_delta = getValue(msg, ' ', 2).toDouble();
+    reorient_delta = getValue(msg, ' ', 1).toDouble();
+    
   } else if (command == "DON") { // this is to enable the offset DELTA that is driven by the gyroscope of the phone
     driving_delta = 0.0;
+    reorient_delta = 0.0;
+    motorController.reorient(1.0, 1.0);
     driving = true;
   } else if (command == "DOFF") { // this is to disable the offset DELTA that is driven by the gyroscope of the phone
     driving_delta = 0.0;
+    reorient_delta = 0.0;
+    motorController.reorient(1.0, 1.0);
     driving = false;
   }
 
@@ -260,102 +266,6 @@ void loop() {
     }
   }
 
-  /*
-    if(Serial.available()>0){
-    char msg = Serial.read();
-    switch(msg){
-      case '4':
-        Kp += 5;
-        pid.SetTunings(Kp, Ki, Kd);
-        break;
-      case '1':
-        Kp -= 5;
-        if(Kp<0)
-          Kp = 0;
-        pid.SetTunings(Kp, Ki, Kd);
-        break;
-
-      case '5':
-        Ki += 35;
-        pid.SetTunings(Kp, Ki, Kd);
-        break;
-      case '2':
-        Ki -= 35;
-        if(Ki<0)
-          Ki = 0;
-        pid.SetTunings(Kp, Ki, Kd);
-        break;
-
-      case '6':
-        Kd += 0.1;
-        pid.SetTunings(Kp, Ki, Kd);
-        break;
-      case '3':
-        Kd -= 0.1;
-        if(Kd<0)
-          Kd = 0;
-        pid.SetTunings(Kp, Ki, Kd);
-        break;
-
-
-      case 'i':
-        Kp2 += 5;
-        pid2.SetTunings(Kp2, Ki2, Kd2);
-        break;
-      case 'k':
-        Kp2 -= 5;
-        if(Kp2<0)
-          Kp2 = 0;
-        pid2.SetTunings(Kp2, Ki2, Kd2);
-        break;
-
-      case 'o':
-        Ki2 += 35;
-        pid2.SetTunings(Kp2, Ki2, Kd2);
-        break;
-      case 'l':
-        Ki2 -= 35;
-        if(Ki2<0)
-          Ki2 = 0;
-        pid2.SetTunings(Kp2, Ki2, Kd2);
-        break;
-
-      case 'p':
-        Kd2 += 0.1;
-        pid2.SetTunings(Kp2, Ki2, Kd2);
-        break;
-      case 'm':
-        Kd2 -= 0.1;
-        if(Kd2<0)
-          Kd2 = 0;
-        pid2.SetTunings(Kp2, Ki2, Kd2);
-        break;
-
-
-      case '8':
-        originalSetpoint += 0.1;
-        setpoint = originalSetpoint;
-        break;
-      case '0':
-        originalSetpoint -= 0.1;
-        setpoint = originalSetpoint;
-        break;
-
-      case '9':
-        lineBetweenTwoPids += 1;
-        break;
-      case '7':
-        lineBetweenTwoPids -= 1;
-        if(lineBetweenTwoPids<0)
-          lineBetweenTwoPids = 0;
-        break;
-
-      case '\n':
-        break;
-    }
-    }
-  */
-
   // Step 0: do mpu stuff
   if (!dmpReady) return;
   //mpuInterrupt = false;
@@ -383,8 +293,15 @@ void loop() {
     // apply driving delta if we're driving
     if (driving) {
       setpoint = originalSetpoint + driving_delta*1.3;
+      if(reorient_delta<0){
+        motorController.reorient(abs(1.0 + reorient_delta/10), 1.0);
+      } else{
+        motorController.reorient(1.0, abs(1.0 - reorient_delta/10));
+      }
     } else {
       driving_delta = 0.0;
+      motorController.reorient(1.0, 1.0);
+      reorient_delta = 0.0;
       setpoint = originalSetpoint;
     }
     
