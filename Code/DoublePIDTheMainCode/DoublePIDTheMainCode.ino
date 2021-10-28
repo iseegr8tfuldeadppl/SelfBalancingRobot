@@ -34,7 +34,7 @@ float ypr[3]; // [yaw, pitch, roll] yaw/pitch/roll container and gravity vector
 
 //PID
 double originalSetpoint = 181.45; // 181
-int lineBetweenTwoPids = 8.36; // 15
+int lineBetweenTwoPids = 8; // 15
 //PID1
 double setpoint = originalSetpoint;
 double movingAngleOffset = 0.1;
@@ -50,8 +50,8 @@ PID pid(&input, &output, &setpoint, Kp, Ki, Kd, DIRECT);
 double setpoint2 = originalSetpoint;
 double movingAngleOffset2 = 0.1;
 double input2, output2;
-double Kp2 = 135; // 135
-double Ki2 = 525; // 525
+double Kp2 = 135.0; // 135
+double Ki2 = 525.0; // 525
 double Kd2 = 9.10; // 9.10
 
 int samplingTime2 = samplingTime;
@@ -79,7 +79,6 @@ String values_to_send = "";
 float driving_delta = 0.0, reorient_delta = 0.0;
 boolean driving = false;
 void treat_command() {
-  Serial.println(msg);
 
   String command = getValue(msg, ' ', 0);
   if (command == "PID") {
@@ -127,6 +126,7 @@ void treat_command() {
   } else if (command == "DON") { // this is to enable the offset DELTA that is driven by the gyroscope of the phone
     driving_delta = 0.0;
     reorient_delta = 0.0;
+    Serial.println("YES");
     motorController.reorient(1.0, 1.0);
     driving = true;
   } else if (command == "DOFF") { // this is to disable the offset DELTA that is driven by the gyroscope of the phone
@@ -255,8 +255,11 @@ void setup() {
 float start = -1;
 void loop() {
 
+      if(Serial.available()>0)
+      Serial.println(Serial.available());
   if (Serial.available()) {
     char ah = Serial.read();
+      Serial.println(ah);
     if (ah == '\n') {
       Serial.println(msg);
       treat_command();
