@@ -121,18 +121,18 @@ void treat_command() {
     EEPROM.put( 70, lineBetweenTwoPids );
   } else if (command == "D") { // this is the offset DELTA that is driven by the gyroscope of the phone
     driving_delta = getValue(msg, ' ', 2).toDouble();
-    reorient_delta = getValue(msg, ' ', 1).toDouble();
+    //reorient_delta = getValue(msg, ' ', 1).toDouble();
     
   } else if (command == "DON") { // this is to enable the offset DELTA that is driven by the gyroscope of the phone
     driving_delta = 0.0;
-    reorient_delta = 0.0;
+    //reorient_delta = 0.0;
     Serial.println("YES");
-    motorController.reorient(1.0, 1.0);
+    //motorController.reorient(1.0, 1.0);
     driving = true;
   } else if (command == "DOFF") { // this is to disable the offset DELTA that is driven by the gyroscope of the phone
     driving_delta = 0.0;
-    reorient_delta = 0.0;
-    motorController.reorient(1.0, 1.0);
+    //reorient_delta = 0.0;
+    //motorController.reorient(1.0, 1.0);
     driving = false;
   }
 
@@ -296,15 +296,15 @@ void loop() {
     // apply driving delta if we're driving
     if (driving) {
       setpoint = originalSetpoint + driving_delta*1.3;
-      if(reorient_delta<0){
-        motorController.reorient(abs(1.0 + reorient_delta/10), 1.0);
-      } else{
-        motorController.reorient(1.0, abs(1.0 - reorient_delta/10));
-      }
+      //if(reorient_delta<0){
+      //  motorController.reorient(abs(1.0 + reorient_delta/10), 1.0);
+      //} else{
+      //  motorController.reorient(1.0, abs(1.0 - reorient_delta/10));
+      //}
     } else {
-      driving_delta = 0.0;
-      motorController.reorient(1.0, 1.0);
-      reorient_delta = 0.0;
+      //driving_delta = 0.0;
+      //motorController.reorient(1.0, 1.0);
+      //reorient_delta = 0.0;
       setpoint = originalSetpoint;
     }
     
