@@ -135,6 +135,7 @@ void treat_command() {
     //motorController.reorient(1.0, 1.0);
     driving = false;
   }
+  //Serial.println(msg);
 
 }
 
@@ -255,13 +256,13 @@ void setup() {
 float start = -1;
 void loop() {
 
-      if(Serial.available()>0)
-      Serial.println(Serial.available());
+    if(Serial.available()>0)
+      //Serial.println(Serial.available());
   if (Serial.available()) {
     char ah = Serial.read();
-      Serial.println(ah);
+      //Serial.println(ah);
     if (ah == '\n') {
-      Serial.println(msg);
+      //Serial.println(msg);
       treat_command();
       msg = "";
     } else {
@@ -314,9 +315,10 @@ void loop() {
       motorController.move(output, MIN_ABS_SPEED);
 
     // a simple led  direction indicator
-      if(input>originalSetpoint)
+    //Serial.println("input " + String(input) + " originalSetpoint " + String(originalSetpoint));
+    if(input>originalSetpoint)
       digitalWrite(LED_BUILTIN, HIGH);
-      else
+    else
       digitalWrite(LED_BUILTIN, LOW);
 
 
